@@ -1,0 +1,362 @@
+---
+title: "Collaborative Assignment 1"
+author: "Group 2--Brett Burk, Derek Nokes, William Chan, and David Stern"
+date: "Friday, March 06, 2015"
+output: pdf_document
+toc: yes
+theme: united
+---
+
+\pagebreak
+
+## Introduction
+
+James is a budding entrepeneur who owns and maintains a small business that specializes in sandwich production and is located in a busy office building. James has been logging not only his sandwich sales, but also had the foresight to track the demand of unfillable orders. James sells three types of sandwiches: Ham, Turkey, and Veggie. \newline
+This report focuses solely on optimizing the amount of each type of sandwich that James stocks on a given day in order to maximize sales and minimize waste. \newline
+Our data set consists of two tables, one containing the price and cost of each sandwich, and one containing 130 days of sales and demand data. \newline
+Several types of analysis were performed on the data in order to simulate future sales and estimate the best way to generally maximize James' sales. The first was creating a simulation using the Poisson distribution, and the second involved using Bootstrapping. \newline
+The report contains two methods of analysis, summaries of those methods, and the results they produced, as well as recommendations for how James should proceed.
+
+## Analysis
+
+James maintains a very spartan menu. Due to this, his pricing model does not need to shift, and thus his price, cost, and profit all stay constant.
+ 
+Sandwich | Price | Cost | Profit
+--- | --- | --- | ---
+Ham | $6.50 | $3.50 | $3.00
+Turkey | $6.50 | $4.00 | $2.50
+Veggie | $5.00 | $2.50 | $2.50
+
+
+\newpage
+ 
+### Graphs
+
+The following graphs demonstrate the demand (in black) and the supply (in red) for the various sandwiches:
+
+```{r, echo=FALSE}
+#The loadin and preprocessing
+wd <- "C:\\Users\\Brett\\Dropbox\\CUNY\\606\\Group1\\"
+
+# load the data
+colClasses=c('POSIXct','numeric','numeric','numeric','numeric','numeric','numeric')
+sales <- read.csv(paste0(wd, 'sales.csv'), header=TRUE, 
+                  stringsAsFactors=FALSE,colClasses=colClasses)
+details <- read.csv(paste0(wd, 'details.csv'), header=TRUE,
+                    stringsAsFactors=FALSE)
+dimension<-dim(sales)
+nRows<-dimension[1]
+nCols<-dimension[2]
+
+# extract the price and cost of each product
+hamPrice<-details$price[1]
+hamCost<-details$cost[1]
+turkeyPrice<-details$price[2]
+turkeyCost<-details$cost[2]
+veggiePrice<-details$price[3]
+veggieCost<-details$cost[3]
+
+# define the function to compute revenue, expense, and P&L
+pnlUnderScenario<- function(demand,supply,pricePerUnit,costPerUnit){
+  expense<-supply*costPerUnit
+  unitsSold<-demand
+  flag<-supply-demand<0
+  unitsSold[flag]<-supply[flag]
+  revenue<-unitsSold*pricePerUnit
+  pnl<-sum(revenue-expense)
+  }
+```
+
+#### Ham
+```{r, echo=FALSE, fig.width=3, fig.height=3, fig.align="left"}
+# ham revenue, expense, and P&L
+hamDemand<-sales[,2]
+hamSupply<-sales[,5]
+hamExpense<-hamSupply*hamCost
+hamUnitsSold<-hamDemand
+hamFlag<-hamSupply-hamDemand<0
+hamUnitsSold[hamFlag]<-hamSupply[hamFlag]
+hamRevenue<-hamUnitsSold*hamPrice
+hamPnl<-hamRevenue-hamExpense
+hamOptimalExpense<-hamDemand*hamCost
+hamOptimalRevenue<-hamDemand*hamPrice
+hamOptimalPnl<-hamOptimalRevenue-hamOptimalExpense
+#plot(hamOptimalPnl,type='l',main="Optimal Ham P&L")
+#plot(hamUnitsSold,type='l')
+plot(hamDemand, type='l', xlab="Day", ylab="Ham")
+lines(hamSupply, type='l', col="Red")
+```
+
+#### Turkey
+
+```{r, echo=FALSE, fig.width=3, fig.height=3, fig.align="left"}
+# turkey revenue, expense, and P&L
+turkeyDemand<-sales[,3]
+turkeySupply<-sales[,6]
+turkeyExpense<-turkeySupply*turkeyCost
+turkeyUnitsSold<-turkeyDemand
+turkeyFlag<-turkeySupply-turkeyDemand<0
+turkeyUnitsSold[turkeyFlag]<-turkeySupply[turkeyFlag]
+turkeyRevenue<-turkeyUnitsSold*turkeyPrice
+turkeyPnl<-turkeyRevenue-turkeyExpense
+turkeyOptimalExpense<-turkeyDemand*turkeyCost
+turkeyOptimalRevenue<-turkeyDemand*turkeyPrice
+turkeyOptimalPnl<-turkeyOptimalRevenue-turkeyOptimalExpense
+plot(turkeyDemand, type='l', xlab="Day", ylab="Turkey")
+lines(turkeySupply, type='l', col="Red")
+```
+
+\newpage
+
+#### Veggie
+
+```{r, echo=FALSE, fig.width=3, fig.height=3, fig.align="left"}
+# turkey revenue, expense, and P&L
+veggieDemand<-sales[,4]
+veggieSupply<-sales[,7]
+veggieExpense<-veggieSupply*veggieCost
+veggieUnitsSold<-veggieDemand
+veggieFlag<-veggieSupply-veggieDemand<0
+veggieUnitsSold[veggieFlag]<-veggieSupply[veggieFlag]
+veggieRevenue<-veggieUnitsSold*veggiePrice
+veggiePnl<-veggieRevenue-veggieExpense
+veggieOptimalExpense<-veggieDemand*veggieCost
+veggieOptimalRevenue<-veggieDemand*veggiePrice
+veggieOptimalPnl<-veggieOptimalRevenue-veggieOptimalExpense
+#plot(veggieOptimalPnl,type='l',main="Optimal Veggie P&L")
+#plot(veggieUnitsSold,type='l')
+plot(veggieDemand,type='l', xlab="Day", ylab="Veggie")
+lines(veggieSupply,type='l', col="Red")
+```
+
+#### Profits and Loss
+
+Using this data we were able to utilize several approaches to optimizing sales.
+```{r, echo=FALSE, results="hide", }
+# total revenue, expense, and P&L
+totalExpense<-hamExpense+turkeyExpense+veggieExpense
+totalRevenue<-hamRevenue+turkeyRevenue+veggieRevenue
+totalPnl<-totalRevenue-totalExpense
+actualPnL<-sum(totalPnl)
+actualPnLPerDay <- actualPnL/nRows
+plot(totalPnl,type='l', xlab="Day", ylab="Total Profits and Losses")
+# under perfect foresight
+optimalExpense<-hamOptimalExpense+turkeyOptimalExpense+veggieOptimalExpense
+optimalRevenue<-hamOptimalRevenue+turkeyOptimalRevenue+veggieOptimalRevenue
+optimalPnl<-hamOptimalPnl+turkeyOptimalPnl+veggieOptimalPnl
+#plot(optimalPnl,type='l',main="Optimal Total P&L")
+#hist(optimalPnl)
+# set the parameters for resampling
+
+nPaths<-1000
+
+# create the data resampling index
+resampleIndex<-sample(1:nRows,nRows*nPaths,replace=TRUE,
+                             prob=NULL)
+
+# create the resampled data for each column
+resampledData<-sales[resampleIndex,]
+
+# reshape the data (nRows x nPaths)
+hamDemandPaths<-data.frame(matrix(resampledData[,2],nrow=nRows,ncol=nPaths))
+turkeyDemandPaths<-data.frame(matrix(resampledData[,3],nrow=nRows,ncol=nPaths))
+veggieDemandPaths<-data.frame(matrix(resampledData[,4],nrow=nRows,ncol=nPaths))
+hamSupplyPaths<-data.frame(matrix(resampledData[,5],nrow=nRows,ncol=nPaths))
+turkeySupplyPaths<-data.frame(matrix(resampledData[,6],nrow=nRows,ncol=nPaths))
+veggieSupplyPaths<-data.frame(matrix(resampledData[,7],nrow=nRows,ncol=nPaths))
+
+# find the distribution of P&L using the original supply and demand
+hamPnLUnderScenarios<-0
+turkeyPnLUnderScenarios<-0
+veggiePnLUnderScenarios<-0
+totalPnLUnderScenarios<-0
+for (pathIndex in 1:nPaths){
+  hamPnLUnderScenarios[pathIndex]<-pnlUnderScenario(
+    hamDemandPaths[,pathIndex],hamSupplyPaths[,pathIndex],
+    hamPrice,hamCost)
+  turkeyPnLUnderScenarios[pathIndex]<-pnlUnderScenario(
+    turkeyDemandPaths[,pathIndex],turkeySupplyPaths[,pathIndex],
+    turkeyPrice,turkeyCost)
+  veggiePnLUnderScenarios[pathIndex]<-pnlUnderScenario(
+    veggieDemandPaths[,pathIndex],veggieSupplyPaths[,pathIndex],
+    veggiePrice,veggieCost)  
+  }
+totalPnLUnderScenarios=hamPnLUnderScenarios+turkeyPnLUnderScenarios+
+  totalPnLUnderScenarios
+
+# maximize veggie P&L for each price scenario
+hamSupplyRange<-min(hamDemand):max(hamDemand)
+nScenarios<-length(hamSupplyRange)
+hamPnLUnderSupplyScenarios<-matrix(rep(0,nPaths*nScenarios),
+                                      nrow=nPaths,ncol=nScenarios)
+
+for (scenarioIndex in 1:nScenarios){
+
+  hamSupplyScenario<-rep(hamSupplyRange[scenarioIndex],nRows,
+                            nrow=nRows,ncol=1)
+
+  for (pathIndex in 1:nPaths){
+    hamPnLUnderSupplyScenarios[pathIndex,scenarioIndex]<-pnlUnderScenario(
+      hamDemandPaths[,pathIndex],hamSupplyScenario,
+      hamPrice,hamCost)
+  }
+}
+#
+hamExpectedPnLUnderScenario<-colMeans(hamPnLUnderSupplyScenarios)
+# add code to compute the percentile bounds
+
+hamMaxExpectedPnLUnderScenario<-max(hamExpectedPnLUnderScenario)
+#
+hamMaxIndex<-hamExpectedPnLUnderScenario==hamMaxExpectedPnLUnderScenario
+#
+hamOptimalSupply<-hamSupplyRange[hamMaxIndex]
+
+# maximize veggie P&L for each price scenario
+turkeySupplyRange<-min(turkeyDemand):max(turkeyDemand)
+nScenarios<-length(turkeySupplyRange)
+turkeyPnLUnderSupplyScenarios<-matrix(rep(0,nPaths*nScenarios),
+                                      nrow=nPaths,ncol=nScenarios)
+
+for (scenarioIndex in 1:nScenarios){
+
+  turkeySupplyScenario<-rep(turkeySupplyRange[scenarioIndex],nRows,
+                            nrow=nRows,ncol=1)
+
+  for (pathIndex in 1:nPaths){
+    turkeyPnLUnderSupplyScenarios[pathIndex,scenarioIndex]<-pnlUnderScenario(
+      turkeyDemandPaths[,pathIndex],turkeySupplyScenario,
+      turkeyPrice,turkeyCost)
+  }
+}
+turkeyExpectedPnLUnderScenario<-colMeans(turkeyPnLUnderSupplyScenarios)
+# add code to compute the percentile bounds
+
+#
+turkeyMaxExpectedPnLUnderScenario<-max(turkeyExpectedPnLUnderScenario)
+#
+turkeyMaxIndex<-turkeyExpectedPnLUnderScenario==turkeyMaxExpectedPnLUnderScenario
+#
+turkeyOptimalSupply<-turkeySupplyRange[turkeyMaxIndex]
+
+# maximize veggie P&L for each price scenario
+veggieSupplyRange<-min(veggieDemand):max(veggieDemand)
+nScenarios<-length(veggieSupplyRange)
+veggiePnLUnderSupplyScenarios<-matrix(rep(0,nPaths*nScenarios),
+                                      nrow=nPaths,ncol=nScenarios)
+
+for (scenarioIndex in 1:nScenarios){
+
+  veggieSupplyScenario<-rep(veggieSupplyRange[scenarioIndex],nRows,
+                            nrow=nRows,ncol=1)
+
+  for (pathIndex in 1:nPaths){
+    veggiePnLUnderSupplyScenarios[pathIndex,scenarioIndex]<-pnlUnderScenario(
+      veggieDemandPaths[,pathIndex],veggieSupplyScenario,
+      veggiePrice,veggieCost)
+  }
+}
+#
+veggieExpectedPnLUnderScenario<-colMeans(veggiePnLUnderSupplyScenarios)
+# add code to compute the percentile bounds
+
+#
+veggieMaxExpectedPnLUnderScenario<-max(veggieExpectedPnLUnderScenario)
+#
+veggieMaxIndex<-veggieExpectedPnLUnderScenario==veggieMaxExpectedPnLUnderScenario
+#
+veggieOptimalSupply<-veggieSupplyRange[veggieMaxIndex]
+
+totalMaxExpectedPnLUnderScenario<-hamMaxExpectedPnLUnderScenario+
+  turkeyMaxExpectedPnLUnderScenario+veggieMaxExpectedPnLUnderScenario
+```
+\newpage
+
+### Poisson Distribution 
+
+The Poisson distribution is a probability distribution that models the probability of events occurring in a fixed amount of time and space and with the assumption of independence of events. This is not a perfect model of sandwich sales as the independence of sandwich needs is not a perfect assumption. We can, however, analyze the data in these terms and analyze our results.\newline
+In order to use the poisson distribution, we first had to calculate the mean of each sandwiches sales and then used those means to calculate the days with greater and lesser demand than the expected value.
+
+Sandwich Type | Mean demand
+--- | ---
+Ham | 16
+Turkey | 22
+Veggie | 13
+
+#### Ham:
+
+Using the mean of 16, the following table was created:
+
+Amount of Ham Sandwiches | Days with greater demand | Days with less demand
+--- | --- | ---
+15 | 45 | 69
+16 | 61 | 56
+17 | 74 | 40
+
+15 sandwiches would thus be ideal.
+
+#### Turkey:
+
+Using the mean of 22, the following table was created:
+
+Amount of Turkey Sandwiches | Days with greater demand | Days with less demand
+--- | --- | ---
+20 | 41 | 76
+21 | 54 | 64
+22 | 66 | 53
+27 | 103 | 18
+
+20 sandwiches would thus be ideal.
+
+#### Veggie
+
+Using the mean of 13, the following table was created:
+
+Amount of Veggie Sandwiches | Days with greater demand | Days with less demand
+--- | --- | ---
+13 | 55 | 57
+14 | 73 | 43
+15 | 87 | 30
+
+13 sandwiches would thus be ideal.
+
+### Bootstrapping
+
+Bootstrapping is a statistical method that utilizes modern computing power to rapidly sample data in order to simulate larger data sets than we have access to. This is also not a perfect model, but since our data set is relatively small, Bootstrapping is a good method for simulating a larger data set.
+
+#### Graphs
+
+
+
+#### Ham
+```{r, echo=FALSE, fig.width=3, fig.height=3, fig.align="left"}
+plot(hamSupplyRange,hamExpectedPnLUnderScenario,type='l', xlab="Ham Supply Range", ylab="Expected P&L Under Scenario")
+```
+#### Turkey
+```{r, echo=FALSE, fig.width=3, fig.height=3, fig.align="left"}
+#
+plot(turkeySupplyRange,turkeyExpectedPnLUnderScenario,type='l', xlab="Turkey Supply Range", ylab="Expected P&L Under Scenario")
+```
+#### Veggie
+```{r, echo=FALSE, fig.width=3, fig.height=3, fig.align="left"}
+#
+plot(veggieSupplyRange,veggieExpectedPnLUnderScenario,type='l', xlab="Veggie Supply Range", ylab="Expected P&L Under Scenario")
+```
+
+#### Bootstrapping results
+
+The following table supplies the results of that data:
+
+Type of sandwich | Optimum supply | Expected P&L from supply
+--- | --- | ---
+Ham | 15 | 38.01255
+Turkey | 20 | 43.17435
+Veggie | 13 | 25.7035
+
+## Recommendations
+
+The two methods we applied to the data set both reached the same conclusion, thus it is relatively easy to make a recommendation. James should stock 15 Ham sandwiches, 20 Turkey sandwiches, and 13 veggie sandwiches per day in order to optimize sales and minimize waste. \newline
+In addition, James should continue to log data, and consider the recording of other pertinent elements, such as weather, time of the year, and day of the week, all of which could be used to further optimize his sandwich selling.
+
+## Conclusion
+
+Bootstrapping and simulation using the Poisson distribution are different methods that both led us to the same result. There are many other approaches that may have been used, but these two seemed the most pertinent to the data set and James' needs.

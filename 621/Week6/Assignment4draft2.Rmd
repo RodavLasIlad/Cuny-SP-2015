@@ -1,0 +1,125 @@
+---
+title: "Assignment 4"
+author: "Brett Burk"
+date: "Thursday, March 12, 2015"
+output: pdf_document
+toc: yes
+---
+```{r}
+folder <- "C:\\Users\\Brett\\Dropbox\\CUNY\\621\\Week6\\"
+jd.train <- read.csv(paste0(folder, "jury-training-data(1).csv"))
+jd.train <- jd.train[complete.cases(jd.train),]
+jd.public <- read.csv(paste0(folder, "jury-learning-data-public(1).csv"))
+jd.public <- jd.public[complete.cases(jd.public),]
+jd.private <- read.csv(paste0(folder, "jury-learning-data-private(1).csv"))
+```
+
+##### 1 #####
+
+I rewrote the code, but it is based off previous work.
+
+```{r}
+entropy <- function(d){
+  prob <- table(d)/sum(table(d))
+  e <- sum((-prob) * log(prob, base=2))
+  return (e)
+}
+```
+
+##### 2 #####
+
+```{r}
+infogain <- function(d, a){
+  ed <- entropy(d)
+  split.df <- split(d, a)
+  s <- mean(sapply(1:length(split.df), function(x) entropy(split.df[x])))
+  return(ed - s)  
+}
+
+```
+
+##### 3 #####
+
+```{r}
+checkgain <- function(input.df, target.var){
+  curr.df <- input.df[-target.var]
+  curr.var <- input.df[target.var]
+  temp <- sapply(1:ncol(curr.df), function(x) infogain(curr.df[,x], curr.var))
+  best.gain.pos <- which.max(temp)
+  return(as.list(c(best.gain.pos, temp)))  
+}
+```
+
+##### 4 #####
+
+```{r}
+split.tree <- function(inc.df, var.int){
+  split.col <- checkgain(inc.df, var.int)[[1]]
+  split.col.name <- names(inc.df[split.col])
+  curr.split <- split(inc.df, inc.df[,split.col])
+  temp <- sapply(1:length(curr.split), function(x) table(curr.split[[x]][,var.int])/nrow(curr.split[[x]]))
+  colnames(temp) <- names(curr.split)
+  for (i in 1:length(curr.split)){
+    curr.split[[i]] <- curr.split[[i]][,-split.col]
+  }
+  return(list(split.col.name, temp, curr.split, split.col))
+}
+
+first.split <- split.tree(jd.train, 5)
+```
+
+```{r}
+total.branches <- list()
+build.tree <- function(curr.df, var.int, curr.tree){
+  if (ncol(curr.df) < 3){
+    temp.df <- split.tree(curr.df, var.int)
+    var.int <- var.int - 1
+    for(i in 1:(length(temp.df[[3]]))){
+      temp.tree <- c(curr.tree, names(temp.df[[3]])[i])
+      total.branches[[length(total.branches)+1]] <<- temp.tree[-1]
+      print(temp.tree[-1])
+    }
+  }
+  else {
+    temp.df <- split.tree(curr.df, var.int)
+    var.int <- var.int - 1
+    for(i in 1:(length(temp.df[[3]]))){
+      temp.tree <- c(curr.tree, names(temp.df[[3]])[i])
+      build.tree(temp.df[[3]][[i]], var.int, temp.tree)
+    }
+  }
+}
+```
+
+```{r}
+for(i in 1:length(total.branches)){
+
+  if(total.branches[[i]][1] == "Female"){
+    total.branches[[i]][5] <- names(which.max(table(subset(jd.train, 
+                                     gender == "Female" &
+                                       marital == total.branches[[i]][2] &
+                                       agegroup == total.branches[[i]][3] &
+                                       employment == total.branches[[i]][4])[,5])))
+  }
+  else{
+    total.branches[[i]][5] <- names(which.max(table(subset(jd.train, 
+                                     gender == "Male" &
+                                       marital == total.branches[[i]][2] &
+                                       employment == total.branches[[i]][4] &
+                                       agegroup == total.branches[[i]][3])[,5])))
+  }
+}
+total.branches
+```
+
+```{r}
+jd.public[,6] <- "Guilty"
+jd.public[jd.public$gender == "Female" & jd.public$marital == "Married" & jd.public$agegroup == "Older Adult",6] <- "Not Guilty"
+sum(jd.public[,5] == jd.public[,6])/nrow(jd.public)
+
+bretts.classifiers <- jd.private
+bretts.classifiers[,5] <- "Guilty"
+bretts.classifiers[jd.private$gender == "Female" & jd.private$marital == "Married" & jd.private$agegroup == "Older Adult",5] <- "Not Guilty"
+write.csv(bretts.classifiers, paste0(folder, "jd.private.classified.csv"))
+```
+50% accuracy is not terrible for classification given that there are more not guilty than guilty in the public set and more guilty than not guilty in the training data set, so it is not quite as bad as throwing a dart at a board. The tree could be trimmed and reshaped, but this is why random forests are far more effective than creating a single decision tree.

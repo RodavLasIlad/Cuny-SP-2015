@@ -1,0 +1,162 @@
+---
+title: "Assignment 3"
+author: "Brett Burk"
+date: "Thursday, April 02, 2015"
+output: pdf_document
+toc: yes
+---
+\pagebreak
+
+## 1
+
+### a
+The probability is quite low
+```{r}
+ans <- 0
+for(i in 6:10){
+  ans <- ans + choose(10, i) * (1/4)^i * (3/4)^(10-i)
+}
+ans
+```
+
+### b
+The chance is significantly lower
+```{r}
+ans2 <- 0
+for(i in 6:10){
+  ans2 <- ans2 + choose(10, i) * (1/5)^i * (4/5)^(10-i)
+}
+ans-ans2
+```
+
+### c
+
+You would expect about two.
+
+### d
+
+It really depends on the quality of the questions and answers. I would say that although it reduces the expected value to less than one, that the teacher would do better to spend that time helping the students so that they are not  randomly guessing on his tests. 
+
+## 2
+
+### a
+
+```{r}
+dpois(3, lambda=1.5)
+```
+
+### b
+
+```{r}
+qpois(.95, 1.5)
+```
+
+### c
+
+```{r}
+accidents <- 0
+for (i in 0:2){
+  accidents <- accidents + dpois(i, 1.5)
+}
+accidents
+```
+
+## 3
+
+### a
+
+Yes, anything greater than 250, as the uniform distribution gives equal weight to every age in between, it would be surprising to find anything outside of that boundary.
+
+### b
+
+```{r}
+24/250
+```
+
+### c
+```{r}
+250/2
+```
+
+### d
+Less than one year old (with a slight assumption that a single day doesn't make a dramatic difference[months fluctuate in size, so this assumption seemse fair]):
+```{r}
+12/250
+```
+
+More than 20 years old:
+```{r}
+10/250
+```
+
+It is more likely that you would find a younger otter, as there are more months covered in the former case than the latter
+
+## 4
+
+### a
+
+```{r}
+pnorm(75, mean = 80, sd = 10) - pnorm(65, mean = 80, sd = 10)
+```
+
+### b
+
+```{r}
+1 - pnorm(92, mean = 80, sd = 10)
+```
+
+### c
+
+```{r}
+pnorm(68, mean = 80, sd = 10)
+```
+
+As they are both 12 away from the mean, the probability is the same
+
+### d
+```{r}
+qnorm(.3, mean = 80, sd = 10)
+```
+
+### e
+```{r}
+qnorm(.8, mean = 80, sd = 10)
+```
+
+### f
+
+```{r}
+qnorm(.2, mean = 80, sd = 10)
+qnorm(.8, mean = 80, sd = 10)
+```
+## 5
+
+### a
+
+```{r}
+pnorm(20, mean = 20, sd = 10) - pnorm(10, mean = 20, sd = 10)
+```
+
+### b
+
+```{r}
+1 - pnorm(60, mean = 20, sd = 10)
+```
+
+### c
+
+```{r}
+pnorm(0, mean = 20, sd = 10)
+```
+
+These would be times when the flight arrives early
+
+### d
+25th percentile:
+```{r}
+qnorm(.25, mean = 20, sd = 10)
+```
+75th percentile:
+```{r}
+qnorm(.75, mean = 20, sd = 10)
+```

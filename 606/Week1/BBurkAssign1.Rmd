@@ -1,0 +1,93 @@
+---
+title: "Assignment 1"
+author: "Brett Burk"
+date: "Monday, February 02, 2015"
+output: pdf_document
+---
+Dobrow chapter 1 problems 1.6, 1.8, 1.10, 1.16, 1.22, 1.37, 1.44, 1.45
+\newline \newline
+\textbf{1.6.a}: {(1,3), (2,2), (3,1)} \newline \newline
+\textbf{1.6.b.}: {(3,6), (4,5), (5,4), (6,3)}\newline \newline
+\textbf{1.6.c.}: {(1,3), (2,3), (3,3), (4,3), (5,3), (6,3)}\newline \newline
+\textbf{1.6.d.}: {(1,1), (2,2), (3,3), (4,4), (5,5), (6,6)}\newline \newline
+\textbf{1.6.e.}: {(3,1), (4,1), (5,1), (6,1), (5,2), (6,2)}\newline \newline
+\textbf{1.8}: In terms of Boys (B) the space is B = {0,1,2,3,4,5,6} or in terms of Children (C) with Boys (B) and Girls (G) represented:  C = {(G), (B,G), (B,B,G), (B,B,B,G), (B,B,B,B,G), (B,B,B,B,B,G), (B,B,B,B,B,B)}\newline \newline
+\textbf{1.10}: Because $p + p^2 + p \leq 1$ using the Quadratic equation $\frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$ we get that $p \leq \sqrt{2} -1$ so one possible value of p would be approximately $0.414213$\newline \newline
+\textbf{1.16.a}: $$\frac{1}{26^2 + 26^3 + 26^4 + 26^5} = \frac{1}{12356604} \approx 0.000000081$$
+\newline
+\textbf{1.16.b}: $$\frac{26^4}{26^2 + 26^3 + 26^4 + 26^5} = \frac{456976}{12356604} \approx 0.036982329$$
+\newline
+\textbf{1.16.c}: $$\frac{26 + 26^2 + 26^2 + 26^3}{26^2 + 26^3 + 26^4 + 26^5} = \frac{18954}{12356604} \approx 0.001533917$$
+\newline
+\textbf{1.16.d}: $$\frac{25^2 + 25^3 + 25^4 + 25^5}{26^2 + 26^3 + 26^4 + 26^5} = \frac{10172500}{12356604} \approx 0.176756$$
+\newline
+\textbf{1.22}: $$Pr(A \cup B) = 0.6$$ $$Pr(A \cup B^C) = 0.8$$ $$Pr(A) + Pr(B) - Pr(AB) = 0.6$$ $$ Pr(A) + Pr(B^C) - Pr(AB^C) = 0.8$$ $$Pr(A) + 1 - Pr(B) - Pr(A (1-Pr(B))) =0.8$$ Thus $$ Pr(A) = 0.4$$
+\newline
+\textbf{1.37}: $$\frac{5000}{4} = 1250$$ $$\frac{5000}{7} = 714$$ $$\frac{5000}{10} = 500$$ $$\frac{5000}{28} = 178$$ $$\frac{5000}{70} = 71$$ $$\frac{5000}{40} = 125$$ $$\frac{5000}{280} = 17$$ Using $Pr(A) + Pr(B) + Pr(C) - Pr(AB) - Pr(BC) - Pr(AC) + Pr(ABC)$ $$1250 + 714 + 500 -178 - 71 - 125 + 17 = 2107$$ Thus the probability is $$\frac{2107}{5000} = 0.4214$$
+\newline
+\textbf{1.44}:
+```{r}
+trials = 1e+06
+sum(replicate(trials, 2 %in% sample(c(1:4), size = 5, replace = TRUE)))/trials
+```
+\textbf{1.45}:
+```{r}
+X <- sample(c(1,4,8,16), size = 1, replace = TRUE, prob = c(0.1, 0.2, 0.3, 0.4))
+X
+```
+Dobrow chapter 2 problems 2.10, 2.12, 2.14, 2.24, 2.26, 2.30
+\newline \newline
+\textbf{2.10}: As there is a $\frac{1}{3}$ chance of the ball from A being White, and a $\frac{2}{3}$ chance of it being red, the probabilities are $\frac{1}{3}$ of it being $\frac{2}{5}$ white and $\frac{2}{3}$ of it being $\frac{1}{5}$ thus the total probability is $\frac{4}{15} = 0.2 \bar{6}$ \newline \newline
+\textbf{2.12}: $Pr(A) = \frac{1}{2}$,  $Pr(A^C) = \frac{1}{2}$, $Pr(B^C|AC) = \frac{1}{3}$, $Pr(B|AC) = \frac{2}{3}$, $Pr(C|A) = \frac{1}{4}$, $Pr(C^C|A) = \frac{3}{4}$ Given those:
+$$Pr(B|AC) = \frac{2}{3} = \frac{Pr(ABC)}{Pr(AC)}$$
+$$Pr(C|A) = \frac{Pr(AC)}{Pr(A)}$$
+$$\frac{1}{4} = \frac{Pr(AC)}{\frac{1}{2}}$$
+$$Pr(AC) = \frac{1}{8}$$
+$$\frac{2}{3} \times \frac{1}{8} = Pr(ABC) = \frac{1}{12} = 0.8 \bar{3}$$
+\newline
+\textbf{2.14}: $$Pr(B) = 1 - Pr(B^C) = 1 - \prod_{i=1}^{n-1} (1 - \frac{i}{687}) > 0.5$$
+$$1 - \frac{687!}{((687-n)! \times 687^n)} = 0.5$$
+$$2(687!) = ((687-n)! \times 687^n)$$
+$$2n! = 687^n$$
+$$log(2n!) = n \times log(687)$$
+Thus n is 32 if we wish for a greater than half chance that two Martians were born on the same day. \newline\newline
+\textbf{2.24}: (Given the fix in the errata): $Pr(Cancer) = 0.0238$, $Pr(Test Negative|Cancer)=0.15$, $Pr(Test Positive|No Cancer)=0.05$, $Pr(Test Positive|Cancer) = 0.85$, $Pr(Test Negative|No Cancer) = 0.95$
+Using Bayes we thus have 
+$$\frac{0.85 \times 0.0238}{0.85 \times 0.238 + 0.05 \times (1-0.0238)} \approx 0.293$$ Thus a woman who tested positive would have approximately a 29.3% chance of having cancer if they tested positive. \newline\newline
+\textbf{2.26}: Using Bayes, we have
+$$\frac{0.8 \times 0.05}{0.8 \times 0.05 + 0.2 \times 0.95} \approx 0.1739$$ There is approximately a 17.39% chance that the cab is actually blue. \newline\newline
+\textbf{2.30}: The initial probability of selecting the correct envelope is $\frac{1}{4}$. Assuming that someone always picks envelope one, the chance of winning is roughly $\frac{1}{4}$ if they keep the envelope they stayed with. If they switch, the probability is $\frac{3}{4}$ thus you should switch it.
+```{r}
+shoulda.stayed <- 0
+shoulda.switched <- 0
+trials <- 10000
+for(n in 1:trials) {
+  envelope.with.money <- sample(1:4,1)
+  first.guess <- sample(1:4,1)
+  # Increases the count depending on boolean test
+  shoulda.stayed <- shoulda.stayed + (envelope.with.money == first.guess)
+  shoulda.switched <- shoulda.switched + (envelope.with.money != first.guess)
+}
+shoulda.stayed/trials
+shoulda.switched/trials
+```
+We can thus clearly see that switching is the better option.\newline\newline
+
+Challenge Problems (Optional for up to one point each)
+Dobrow chapter 1
+problem 1.32
+Dobrow
+chapter 2 problems 2.20, 2.33 : \newline\newline
+\textbf{1.32}: Using taylor expansons we know that$$\sum_{k \geq 0} \frac{3^k}{k!} = e^{3}$$ thus $c$ must equal $\frac{1}{e^3}$ or $e^{-3}$\newline\newline
+\textbf{2.20}: Using Bayes we have $$\frac{1 \times 0.5}{1 \times 0.5 + 0.5 \times 0.5} = \frac{2}{3}$$ Then we have $$\frac{2}{3} \times 1 + \frac{1}{3} \times \frac{1}{2} = \frac{5}{6} = 0.8 \bar{3}$$
+\newline
+\textbf{2.33}:
+```{r}
+box1 <- c('g', 'g')
+box2 <- c('g', 's')
+# Simulating the removal of one gold coin from the pool
+boxes <- c(box1, box2)[-1]
+trials <- 100000
+sum(replicate(trials, 'g' == sample(boxes, 1)))/trials
+```
+We can thus see that there is a $\frac{2}{3}$ rds probability of the second coin being gold.

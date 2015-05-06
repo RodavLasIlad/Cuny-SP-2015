@@ -1,0 +1,91 @@
+---
+title: "Collaboration1"
+author: "Brett Burk"
+date: "Sunday, February 22, 2015"
+output: pdf_document
+---
+Just change the wd to the appropriate directory for your machine
+```{r}
+wd <- "C:\\Users\\Brett\\Dropbox\\CUNY\\606\\Week2\\"
+```
+Loading in:
+```{r}
+sales <- read.csv(paste0(wd, 'sales.csv'))
+head(sales)
+details <- read.csv(paste0(wd, 'details.csv'))
+details
+summary(sales)
+dem <- sales[c('demand.veggie', 'demand.ham', 'demand.turkey')]
+```
+\textbf{Veggie:}
+```{r, fig.height = 3, fig.width=6}
+v <- dem$demand.veggie
+print('veggie')
+IQR(v)
+sd(v)
+hist(v)
+hist(rpois(130, mean(v)))
+boxplot(v)
+```
+\textbf{Turkey:}
+```{r, fig.height = 3, fig.width=6}
+t <- dem$demand.turkey
+IQR(t)
+sd(t)
+hist(t)
+hist(rpois(130, mean(t)))
+boxplot(t)
+```
+\textbf{Ham:}
+```{r, fig.height = 3, fig.width=6}
+h <- dem$demand.ham
+IQR(h)
+sd(h)
+hist(h)
+hist(rpois(130, mean(h)))
+boxplot(h)
+```
+\textbf{All three combined}
+```{r}
+vth <- v+t+h
+hist(rpois(130, vth))
+summary(vth)
+boxplot(vth)
+rpois(130, vth)
+```
+new work: \newline
+\textbf{Sales ratios:}
+```{r}
+sales['vt.ratio'] <- sales$demand.veggie/sales$demand.turkey
+mean(sales$vt.ratio)
+sd(sales$vt.ratio)
+sales['vh.ratio'] <- sales$demand.veggie/sales$demand.ham
+mean(sales$vh.ratio)
+sd(sales$vh.ratio)
+sales['th.ratio'] <- sales$demand.turkey/sales$demand.ham
+mean(sales$th.ratio)
+sd(sales$th.ratio)
+```
+Well that seems like a dead end, the ratios vary wildly, 
+```{r}
+> sum(available.ham) * 2.50
+Error: object 'available.ham' not found
+> sum(sales$available.ham) * 2.50
+[1] 5125
+> sum(sales$available.turkey) * 2.50
+[1] 5600
+> sum(sales$available.ham) * 3
+[1] 6150
+> sum(sales$available.veggie) * 2.5
+[1] 3075
+> 5600 + 6150 + 3075
+[1] 14825
+> (5600 + 6150 + 3075)/130
+[1] 114.0385
+> (5600 + 6150 + 3075)/131
+[1] 113.1679
+
+
+demand.df <- cbind(sales$demand.ham - 15, sales$demand.turkey - 20, sales$demand.veggie - 13)
+cost.df <- c(15 * 130, 20 * 130, veggie * 130
+      )

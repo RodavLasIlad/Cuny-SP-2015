@@ -1,0 +1,132 @@
+---
+title: "606 Assignment 2"
+author: "Brett Burk"
+date: "Tuesday, February 17, 2015"
+output: pdf_document
+---
+\textbf{3.3} $P(B^C) = 0.4$ thus $P(B) = 0.6$ and $P(R or B) = 0.7$ using $P(R or B) = P(R) + P(B) - P(R and B)$ and $P(R and B) = P(R) P(B)$ we have $$0.7 = P(R) + 0.6 - 0.6P(R)$$ or $$P(R) = \frac{1}{4}$$
+\textbf{3.6} The formula is $$(1-\frac{1}{1000})^{n}=0.5$$
+Solving for n we have $$n = \frac{ln(0.5)}{ln(1-\frac{1}{1000})}=692.8$$ Thus we need to purchase 693 tickets to have at least a 50% chance of winning. \newline
+\textbf{3.8.a}
+Using Bayes theoerem we have $$P(Queen+|Princes-) = \frac{P(Princes-|Queen+)P(Queen+)}{P(Princes-)}$$
+$P(Princes-|Queen+) = \frac{1}{2}^{3} = \frac{1}{8}$ and $P(Queen+) = \frac{1}{2}$ and using the law of total probability, $P(Princes-) = \frac{P(Princes-|Queen+) + P(Princes-|Queen-)}{2} = 0.5625$
+Thus $$P(Queen+|Princes-) = \frac{.125 \times .5}{0.5625} = 0. \bar{1}$$
+\textbf{3.8.b}
+As the queen has a fifty percent chance of passing on the disease if she has it, the fourth prince has $0. \bar{1} \times \frac{1}{2} = 0.0 \bar{5}$ \newline
+\textbf{3.16.a}
+The total possible hands is
+```{r}
+poss.hands <- choose(52,5)
+poss.hands
+```
+(RMD is not great at writing vectors in LaTeX)
+Assuming that aces can be either high or low, there are 40 possible combinations (with the low card being any card from A to 10, and four possible suits). Thus we have 
+```{r}
+40 / poss.hands
+```
+\textbf{3.16.b}
+There are 13 different card options, and once a card has been chosen, there are 12 left, and four options for each of those twelve left. Thus we have $13 \times 12 \times 4 = 624$ possible combinations of four of a kind. Thus the probability is 
+```{r}
+624 / poss.hands
+```
+\textbf{3.16.c}
+The first card can be any of the thirteen (it doesn't matter which suit yet). We can then calculate the probability of getting 3 of that card by doing 4 choose 3. Then we can choose one of the remaining 12 cards and do 4 choose 2 to find the final two cards for the hand.
+```{r}
+(13 * 4 * 12 * choose(4,2)) / poss.hands
+```
+\textbf{3.16.d}
+To calculate this we do 13 choose 5 so we don't get the same number, and then multiply that by four for the four suits. we then subtract the odds of a straight flush
+```{r}
+((choose(13,5) * 4) / poss.hands) - (40 / poss.hands)
+```
+\textbf{3.16.e}
+This requires choosing one of ten cards, and then choosing the other four five times
+```{r}
+((10 * 4^5) / poss.hands) - (40 / poss.hands)
+```
+\textbf{3.16.f}
+Three of a kind requires choosing one card, then two others of that card (out of three possibilities) it then requires the other two cards to not match (so as to not result in a full house)
+```{r}
+(13 * choose(4,3) * choose(12,2) * 4^2) / poss.hands
+```
+\textbf{3.16.g}
+Choose two sets of cards, and choose two copies of each (out of the four) and then choose a fifth card that is neither of the first two
+```{r}
+(choose(13,2) * choose(4,2)^2 * 11 * 4) / poss.hands
+```
+\textbf{3.16.h}
+Choose a card, choose two of the four options, then choose three other cards that are not the same as the first or the other
+```{r}
+(13 * choose(4,2) * choose(12,3) * choose(4,1)^3) / poss.hands
+```
+\textbf{3.22}
+The first one has the highest probability \newline
+i:
+```{r}
+1 - (5/6)^6
+```
+The next two require the binomial formula
+ii:
+```{r}
+1 - (((5/6)^12) + (12 * (1/6) * (5/6)^11))
+```
+iii:
+```{r}
+1 - ((5/6)^18 + 18 * (1/6) * (5/6)^17 + choose(18,2) * (1/6)^2 * (5/6)^16)
+```
+\textbf{3.26.a}
+First using bayes to condition p on a we have
+$$P(p|a) = \frac{P(a|p)P(p)}{P(a)} = \frac{P(p)}{P(a)}$$ We can then use this in the binomial formula and we get $${n \choose 0} (P(p) * P(a))^0 (1-P(p)P(a))^n = (1 - \frac{P(p)}{P(a)})^n$$ 
+\textbf{3.26.b}
+$$P(Z sightings) = {5 \choose z} (0.5 \times 0.75)^z (1 - 0.5 \times 0.75)^{5-z} = {5 \choose z} (0.375)^z (0.625)^{5-z}$$
+```{r}
+z <- 0
+choose(5,z) * (.375)^z * (.625)^(5-z)
+```
+\textbf{3.34}
+There are a total of 104 seasons so in order to calculate the expected value we can use weighting.
+$$0 * \frac{18}{104} + 1 * \frac{30}{104} + 2 * \frac{21}{104} + 3 * \frac{21}{104} + 4 * \frac{6}{104} +5 * \frac{3}{104} + 6 * \frac{3}{104} + 7 * \frac{2}{104 } = \frac{205}{104}$$
+```{r}
+bretts.pois <- function(k, lambda){
+  return((exp(-1 * lambda) * lambda^k)/factorial(k))
+}
+number.of.games <-c(0,1,2,3,4,5,6,7)
+actual.seasons <- c(18, 30, 21, 21, 6, 3, 3, 2)
+lambda <- (205/104)
+expected.seasons <- sapply(number.of.games, function(x) bretts.pois(x, lambda) * 104)
+expected.seasons.rounded <- round(expected.seasons)
+difference.actual.expected <- actual.seasons - expected.seasons.rounded
+huber.gleu <- cbind(number.of.games, 
+                    actual.seasons, 
+                    expected.seasons, 
+                    expected.seasons.rounded, 
+                    difference.actual.expected)
+huber.gleu
+```
+\textbf{3.45}
+```{r}
+horse.lambda <- 0.61
+
+nextDeath <- function(lambda){
+  return(-1 * log(runif(1))/lambda)
+}
+nextDeath(horse.lambda)
+i <- 10000
+horse.deaths <- vector(length = i)
+position <- 0
+nd <- 1
+while((position + nd) < i){
+  position <- position + nd
+  horse.deaths[position] <- horse.deaths[position] + 1
+  nd <- round(nextDeath(lambda))
+}
+hist(horse.deaths, breaks=10)
+hist(rpois(i,lambda), breaks=10)
+```
+They come to similar results, but vary due to the randomness of the variables\newline
+\textbf{4.6} $$E[(X+Y)^2] = E[X^2 + 2XY + Y^2] = E[x^2]+E[2XY]+E[Y^2] =$$ $$E[x^2]+2E[XY]+E[Y^2] = 1 + 6 + 2 = 9$$
+\textbf{4.16} A counter Example would be one where $E[Y] = 0$ but $0 \not\in Y$. Obviously the latter equation would not be solvable, but the left side would. \newline
+\textbf{BONUS: 3.36} This problem can be solved using a combination of Bayes and the Poisson distribution. Bayes says $P(B|Colds) = \frac{P(Colds|B)P(B)}{P(Colds)}$ since $P(B) = P(R)$ we have $P(Colds)=P(Colds|B) + P(Colds|R) * 0.5$ Which simplifies to:
+```{r}
+dpois(3,4)/(dpois(3,1) + dpois(3,4))
+```

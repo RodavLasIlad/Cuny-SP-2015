@@ -1,0 +1,62 @@
+---
+title: "Classification Metrics"
+author: "Brett Burk"
+date: "Monday, May 04, 2015"
+output: pdf_document
+---
+
+##### 1 #####
+
+Loading in the data:
+```{r, message=FALSE}
+library(ggplot2)
+folder <- "C:\\Users\\Brett\\Dropbox\\CUNY\\621\\Classification Metrics\\"
+pregnancy <- read.csv(file.path(folder, "classification-output.csv"))
+```
+
+Get the total amount of positive values
+```{r}
+baseline.event <- sum(pregnancy$class)
+```
+Order the pregnancy data by the probabilities
+```{r}
+pregnancy <- pregnancy[order(pregnancy$Scored.Probabilities, decreasing=TRUE),]
+```
+Gives a vector of the correct.classification percentages
+```{r}
+correct.classifications <- pregnancy$class/baseline.event
+cumul.classifications <- cumsum(correct.classifications)
+```
+Generic line
+```{r}
+to.combine <- (1:(length(correct.classifications)))/length(correct.classifications)
+baseline <- data.frame(cbind(to.combine, to.combine))
+names(baseline) <- c("x", "y")
+lift.data <- data.frame(cbind(to.combine, cumul.classifications))
+```
+The Plot
+```{r, message=FALSE}
+p <- ggplot() + 
+  geom_point(data = lift.data, aes(to.combine, cumul.classifications), color="red") + 
+  geom_line(data = lift.data, aes(to.combine, cumul.classifications),color="red") + 
+  geom_point(data = baseline, aes(x, y), color="blue") + 
+  geom_line(data = baseline, aes(x, y),color="blue") + 
+  ylim(0,1) + 
+  xlim(0,1) + 
+  xlab("Percent of Data") + 
+  ylab("Percent of Correct Classifications") +
+  ggtitle("Lift Chart for Pregnancy Model")
+  
+p
+```
+
+##### 2 #####
+
+```{r, message=FALSE}
+library(caret)
+# This was a little annoying to figure out, until I realized that it confused my positive and negative classifications (hacky fix with the '1-')
+lift1 <- lift(as.factor(1-pregnancy[,9]) ~ pregnancy[,11], data = data.frame(pregnancy[,10]))
+xyplot(lift1, plot = "gain")
+```
+
+Both models appear the same, although the lift function in caret is obviously a lot simpler to operate. 

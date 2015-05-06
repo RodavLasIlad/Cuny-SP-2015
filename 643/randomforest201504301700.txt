@@ -1,0 +1,68 @@
+from sklearn.ensemble import RandomForestClassifier as rfc
+from numpy import std as std
+from numpy import mean as mean
+
+
+def initialize(context):
+    context.iWantThisInWarmupButCantHaveItThere = False
+    # How many years of data to train on
+    context.years = 2
+    # Approximately 250 working days in a year
+    context.workingDays = 250
+    # The stocks I would like to trade
+    context.stocks = [sid(8554)]
+    # Created to store the random forest models
+    context.models = []
+    # The amount of days of history I would like to check
+    context.historicalDays = 30
+    # The future prediction (i.e. in this many days the stock will go up/down)
+    context.predictionDays = 5
+    # The gain in value
+    context.percentChange = .05
+    
+    print('initialized')
+
+        
+def handle_data(context, data):
+    # Placeholder
+    i = 0
+    # First working with the S&P 500
+    if context.iWantThisInWarmupButCantHaveItThere == False:
+        print('training')
+        currHist = history(bar_count=context.years * context.workingDays, frequency='1d', field='price')[context.stocks[i]]
+        context.models.append(train_model(currHist, context))
+        context.iWantThisInWarmupButCantHaveItThere = True
+    # Getting days of history
+    testHist = history(bar_count=context.historicalDays, frequency='1d', field='price')[context.stocks[i]]
+    testChanges = []
+    for j in range(len(testHist)-1):
+        testChanges.append((testHist[j+1] - testHist[j])/testHist[j])
+    print(context.models[i].predict(testChanges))
+        
+    
+def train_model(currHist, context):  
+    # Iterate through the data starting at days + 5
+    trainingX = []
+    trainingY = []
+    priceChanges = []
+    for i in range(len(currHist)-1):
+        priceChanges.append((currHist[i+1] - currHist[i])/currHist[i])
+    
+    for i in range(len(currHist) - (context.historicalDays + context.predictionDays)):
+        currDay = (i + context.historicalDays + context.predictionDays)
+        currValue = 0
+        # Day 35 > day 30 + stdDeviation
+        if currHist[currDay] > currHist[currDay - context.predictionDays] * (1 + context.percentChange):
+            currValue = 1
+        elif currHist[currDay] < currHist[currDay - context.predictionDays] * (1 - context.percentChange):
+            currValue = -1
+        tempList = []
+        for j in range(context.historicalDays - 1):
+            tempList.append(priceChanges[i+j])
+        trainingX.append(tempList)
+        trainingY.append(currValue)
+    clf = rfc()
+    clf.fit(trainingX, trainingY)
+
+    print('finished training')
+    return(clf)

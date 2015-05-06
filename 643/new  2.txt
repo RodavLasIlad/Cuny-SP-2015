@@ -1,0 +1,118 @@
+import datetime as dt
+import statsmodels.tsa.stattools as ts
+import statsmodels.api as sm
+import numpy as np
+
+def initialize(context):
+    # Initialize stock universe
+
+    # Coca-Cola (KO) and Pepsi (PEP)
+    # Wal-Mart (WMT) and Target Corporation (TGT)
+    # Exxon Mobil (XOM) and Chevron Corporation (CVX)
+    # BHP Billiton Limited (BHP) and BHP Billiton plc (BBL)
+    
+    #1. Identification of security (stocks, bonds, futures etc.)  pairs.  Essentially, first create a short list of related securities (we’ll be using equities via Quantopian).
+    
+    context.stocks = [[sid(4283), sid(5885)], 
+                      [sid(8229), sid(21090)],
+                      [sid(8347), sid(23112)],
+                      [sid(863), sid(25165)]]
+
+    # Declare lag value/flag
+    context.warmupDays = 60
+    context.warmedUp = False
+    
+    # Declare max and minimum portfolio values
+    context.max_notional = 1000000
+    context.min_notional = -1000000
+    
+    # Initialize ratio (for the current ratio), historical (historical prices), and current holdings
+    context.ratio = [[]] * len(context.stocks)
+    context.historical = [[[],[]]] * len(context.stocks)
+    context.currDays = 0
+    
+    # The amount of standard deviations that causes a buy
+    context.SDDiff = 2
+    # Possibly implemented later: running average and s.d. to save on computational time
+    # context.currMu = []
+    # context.currSigma = [0] * len(context.stocks)
+    
+    for pair in range(len(context.stocks)):
+        currPair = context.stocks[pair]
+        context.currMu.append(data[currPair[0]].price/data[currPair[1]].price)
+        
+    context.expectedVals = []
+    context.purchases = [[]] * len(context.stocks)
+ 
+def handle_data(context, data):
+    # Check bool flag for 60 day lag
+    if context.warmedUp == False:
+        for pair in range(len(context.stocks)):
+            currPair = context.stocks[pair]
+            context.ratio[pair].append(data[currPair[0]].price/data[currPair[1]].price)
+            context.historical[pair][0].append(data[currPair[0]].price)
+            context.historical[pair][1].append(data[currPair[1]].price)
+
+        if len(context.ratio[0]) >= 60:
+            context.warmedUp = True
+            for pair in range(len(context.stocks)):
+            #Relationship testing.  There are many ways to test of this relationship.  We will be using cointegration.  Two time series are cointegrated if they share the same stochastic drift (the change of average value over time).  There are a couple of video on cointegration, and we’ll go over some examples.
+                dfResult = test_coint(context.historical[pair])
+                context.cointegrated.append(dfResult[0] >= dfResult[4]['10%'])
+            if False in context.cointegrated:
+                print("First pair that is not cointegrated:")
+                # This could be built out to iterate if we are searching for pairs, but all of the pairs I have chosen cointegrate
+                print(context.stocks[np.where([not i for i in context.cointegrated])[0][0]])
+    else:
+        for pair in range(len(context.stocks)):
+            currPair = context.stocks[pair]
+            currSD = np.std(currPair)
+            currMean = np.mean(currPair)
+            currRatio = data[currPair[0]].price/data[currPair[1]].price
+            if currRatio > currMean + context.SDDiff * currSD:
+                
+            elif currRatio < currMean - context.SDDiff * currSD:
+                
+            # Logging data
+            context.ratio[pair].append(currRatio)
+            context.historical[pair][0].append(data[currPair[0]].price)
+            context.historical[pair][1].append(data[currPair[1]].price)
+            
+            
+            
+            
+            
+def test_coint(pair):
+    result = sm.OLS(pair[1], pair[0]).fit()    
+    return ts.adfuller(result.resid)
+
+""" Misc
+    
+# check if the    
+# if stockx - stocky > ave
+# order(stock_x, -shares_x)
+# order(stock_y, shares_y)
+# else
+# order(stock_y, -shares_y)
+# order(stock_x, shares_x)
+# lock in the average
+
+#if the original difference > old average
+#   if trade_list[2][trade_index] > old_ave:
+        #sell if the current difference < current_ave    (crossover)
+#       if (stock_x_price - stock_y_price) < ave:
+#           order(stock_x, shares_x)
+#           order(stock_y, -shares_y)
+
+    #if the orignal difference < old average
+ #   else:
+        #sell if the current difference > current average    (crossover)
+       # if (stock_x_price - stock_y_price) > ave:
+       #     order(stock_y, shares_y)
+            #order(stock_x, -shares_x)
+"""
+
+def check_trades(pair):
+    return pair
+    
+#Building the trade.  Using the historical data we have available, establish baseline values that create rules for buying and selling the securities.  At the core, this is simple.  When the pair is out of line, we buy one and sell the other (other variations exist).  When the pair comes back in line, we exit the trade and capture the profit.
